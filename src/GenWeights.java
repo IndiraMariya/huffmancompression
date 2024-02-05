@@ -1,4 +1,7 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 
 import myfileio.MyFileIO;
 
@@ -47,7 +50,9 @@ public class GenWeights {
 	 * Initializes all elements of the weights array to 0
 	 */
 	void initWeights() {
-		// TODO #1
+		for(int i = 0; i < weights.length; i++) {
+			weights[i] = 0;
+		}
 	}
 
 	/**
@@ -83,8 +88,30 @@ public class GenWeights {
 	 * @param infName - the name of the text file to read
 	 */
 	void generateWeights(String infName) {
-		// TODO #2: write this method and any helper methods
-		System.out.println("generateWeights has not been implemented yet!");
+		inf = fio.getFileHandle(infName);
+		int status = fio.checkFileStatus(inf, true);
+		if (status == MyFileIO.EMPTY_NAME) {
+			hca.issueAlert(HuffAlerts.INPUT, "WARNING", "Filename is empty");
+		} else if (status == MyFileIO.FILE_DOES_NOT_EXIST || status == MyFileIO.READ_ZERO_LENGTH) {
+			hca.issueAlert(HuffAlerts.INPUT, "WARNING", "File is empty");
+		} else if (status == MyFileIO.NO_READ_ACCESS) {
+			hca.issueAlert(HuffAlerts.INPUT, "WARNING", "File is not readable");
+		} else {
+			initWeights();
+			BufferedReader br = fio.openBufferedReader(inf);
+			int c;
+			try {
+				while ((c = br.read()) != -1) {
+				        weights[c]++;
+				   }
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			weights[0]++;
+			fio.closeFile(br);
+		}
+		printWeights();
 		return;
 
 	}
@@ -139,7 +166,38 @@ public class GenWeights {
 	 * @param outfName the name of the weights file (includes weights/ )
 	 */
 	 void saveWeightsToFile(String outfName) {
-		// TODO #3: write this method (and any helper methods)
+		outf = fio.getFileHandle(outfName);
+		int status = fio.checkFileStatus(outf, false);
+		
+		if (status == MyFileIO.EMPTY_NAME)
+			hca.issueAlert(HuffAlerts.OUTPUT, "WARNING", "Filename is empty");
+		if (status == MyFileIO.NOT_A_FILE)
+			hca.issueAlert(HuffAlerts.OUTPUT, "WARNING", "File does not exist.");
+		else if (status == MyFileIO.NO_WRITE_ACCESS)
+			hca.issueAlert(HuffAlerts.OUTPUT, "WARNING", "File is not writeable.");
+		
+		if (!outf.exists()) {
+			fio.createEmptyFile(outfName);
+			status = fio.checkFileStatus(outf, false);
+		}
+		else if (status == MyFileIO.WRITE_EXISTS)
+			hca.issueAlert(HuffAlerts.CONFIRM, "INFORMATION", "File is writeable.");
+		
+		if (status == MyFileIO.FILE_OK || status == MyFileIO.WRITE_EXISTS || status == MyFileIO.READ_ZERO_LENGTH) {
+			BufferedWriter bw = fio.openBufferedWriter(outf);
+			for (int i = 0; i < weights.length; i++) {
+				try {
+					bw.write(i + "," + weights[i] + ",");
+					bw.newLine();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+			}
+			fio.closeFile(bw);
+			hca.issueAlert(HuffAlerts.DONE, "INFORMATION", "File created successfully.");
+		}
+			
 		return;
 	}
 
