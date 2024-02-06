@@ -87,6 +87,12 @@ class HF_GenWeights_ErrorTest {
 		assertTrue("INPUT".equals(alerts.get(0)));
 		assertTrue(tstWeightsIsEmpty(tstWeights));
 		hca.resetLastAlertType();
+
+		//delete sacrificial file if it exists already - due to debugging
+		File testFile = new File(dir+"simple.tst");
+		if (testFile.exists()) 
+			assertTrue(testFile.delete());
+
 		// file does not exist
 		tstWeights = gw.readInputFileAndReturnWeights(dir+"simple.tst");
 
@@ -96,11 +102,7 @@ class HF_GenWeights_ErrorTest {
 		assertTrue(tstWeightsIsEmpty(tstWeights));
 		hca.resetLastAlertType();
 		// create sacrificial file to test exists but is empty
-		File testFile = new File(dir+"simple.tst");
 		try {
-			//delete sacrificial file if it exists already - due to debugging
-			if (testFile.exists()) 
-				assertTrue(testFile.delete());
 			assertTrue(testFile.createNewFile());
 			tstWeights = gw.readInputFileAndReturnWeights(dir+"simple.tst");
 			alerts = hca.getLastAlertType();
