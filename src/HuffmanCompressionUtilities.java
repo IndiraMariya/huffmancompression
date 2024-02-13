@@ -111,13 +111,15 @@ public class HuffmanCompressionUtilities {
 	 */
 	void initializeHuffmanQueue(boolean minimize) {
 		for (int i = 0; i < weights.length; i++) {
-			if (!minimize || weights[i] != 0) {
+			if (minimize && weights[i] != 0) {
 	            HuffmanTreeNode node = new HuffmanTreeNode(i, weights[i]);
 	            queue.add(node);
+                System.out.println(node);
 	        }
-			else {
+			else if (!minimize){
 				HuffmanTreeNode node = new HuffmanTreeNode(i, weights[i]);
 	            queue.add(node);
+	            System.out.println(node);
 			}
 		}
 	}
@@ -154,9 +156,18 @@ public class HuffmanCompressionUtilities {
 	void buildHuffmanTree(boolean minimize) {
 		HuffmanTreeNode left, right;
 		root = null;
-		
+		encodeMap = new String[NUM_ASCII];
 		initializeHuffmanQueue(minimize);
-		
+		while(!queue.isEmpty()) {
+			left = queue.poll();
+			if (queue.isEmpty()){
+				root = left;
+				return;
+			}
+			right = queue.poll();
+			HuffmanTreeNode newNode = new HuffmanTreeNode(left.getWeight() + right.getWeight(), left, right);
+			queue.add(newNode);
+		}
 	}
 	
 	/**
@@ -188,8 +199,14 @@ public class HuffmanCompressionUtilities {
 	 * @param level the level of the current node in the hierarchy. This is for debugging only...
 	 */
 	void createHuffmanCodes(HuffmanTreeNode node, String code, int level) {
-		//TODO: write this method
-		node = root;
+	    if (node == null)
+	        return;
+	    if (node.isLeaf()) {
+	        encodeMap[node.getOrdValue()] = code;
+	        return;
+	    }
+	    createHuffmanCodes(node.getLeft(), code.concat("0"), level + 1);
+	    createHuffmanCodes(node.getRight(), code.concat("1"), level + 1);
 		
 	}
 	
