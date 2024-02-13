@@ -103,6 +103,14 @@ class HF_Decode_ErrorTest {
 		assertTrue(!decFile.exists());
 		hca.resetLastAlertType();
 		
+		// file name is not a file
+		dec.decode("encode", "decode/test.txt","weights/simple.csv", false);
+		alerts = hca.getLastAlertType();
+		assertTrue(alerts.size() == 1);
+		assertTrue("INPUT".equals(alerts.get(0)));
+		assertTrue(!decFile.exists());
+		hca.resetLastAlertType();
+		
 		// file does not exist
 		dec.decode("encode/test.bix", "decode/test.txt","weights/simple.csv", false);
 		alerts = hca.getLastAlertType();
@@ -110,8 +118,13 @@ class HF_Decode_ErrorTest {
 		assertTrue("INPUT".equals(alerts.get(0)));
 		assertTrue(!decFile.exists());
 		hca.resetLastAlertType();
+		
+		
 		// file exists but is empty
 		File testFile = new File("encode/test_empty.bin");
+		if (testFile.exists()) 
+			assertTrue(testFile.delete());
+		
 		try {
 			assertTrue(testFile.createNewFile());
 			dec.decode("encode/test_empty.bin","decode/test.txt", "weights/simple.csv", false);
@@ -147,7 +160,7 @@ class HF_Decode_ErrorTest {
 
 		System.out.println("Testing weights file errors Error Check Functionality:");
 
-
+		// test weights file name is empty error
 		dec.decode("encode/test.bin","decode/test.txt", "", false);
 		alerts = hca.getLastAlertType();
 		assertTrue(alerts.size() >= 1);
@@ -155,19 +168,38 @@ class HF_Decode_ErrorTest {
 		assertTrue(!decFile.exists());
 		hca.resetLastAlertType();
 
-		dec.decode("encode/test.bin","decode/test.txt", "weights/", false);
+		// test weights file not a file
+		dec.decode("encode/test.bin","decode/test.txt", "weights", false);
 		alerts = hca.getLastAlertType();
 		assertTrue(alerts.size() >= 1);
 		assertTrue("INPUT".equals(alerts.get(0)));
 		assertTrue(!decFile.exists());
 		hca.resetLastAlertType();
 
+		// test weights file does not exist.
+		File testFile = new File("weights/simple.cvs");
+		if (testFile.exists()) 
+			assertTrue(testFile.delete());
 		dec.decode("encode/test.bin","decode/test.txt", "weights/simple.cvs", false);
 		alerts = hca.getLastAlertType();
 		assertTrue(alerts.size() >= 1);
 		assertTrue("INPUT".equals(alerts.get(0)));
 		assertTrue(!decFile.exists());
 		hca.resetLastAlertType();
+
+		// test empty weights file
+		try {
+			assertTrue(testFile.createNewFile());
+			dec.decode("encode/test.bin","decode/test.txt", "weights/simple.cvs", false);
+			alerts = hca.getLastAlertType();
+			assertTrue(alerts.size() >= 1);
+			assertTrue("INPUT".equals(alerts.get(0)));
+			assertTrue(!decFile.exists());
+			hca.resetLastAlertType();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	
+		assertTrue(testFile.delete());
 		assertTrue(encFile.delete());
 	}
 
@@ -192,6 +224,7 @@ class HF_Decode_ErrorTest {
 		
 		System.out.println("Testing weights file errors Error Check Functionality:");
 
+		// test empty decode filename
 		dec.decode("encode/test.bin","", "weights/simple.csv", false);
 		alerts = hca.getLastAlertType();
 		assertTrue(alerts.size() >= 1);
@@ -199,18 +232,22 @@ class HF_Decode_ErrorTest {
 		assertTrue(!decFile.exists());
 		hca.resetLastAlertType();
 
-		dec.decode("encode/test.bin","decode/", "weights/simple.csv", false);
+		// test decode file is not a file
+		dec.decode("encode/test.bin","decode", "weights/simple.csv", false);
 		alerts = hca.getLastAlertType();
 		assertTrue(alerts.size() >= 1);
 		assertTrue("OUTPUT".equals(alerts.get(0)));
 		assertTrue(!decFile.exists());
 		hca.resetLastAlertType();
 
+		// test successful decode - raises DONE alert 
 		dec.decode("encode/test.bin","decode/test.txt", "weights/simple.csv", false);
 		alerts = hca.getLastAlertType();
 		assertTrue(alerts.size() == 0);
 		hca.resetLastAlertType();
 		assertTrue(decFile.exists());
+		
+		// test decode with overwrite - generates CONFIRM alert
 		dec.decode("encode/test.bin","decode/test.txt", "weights/simple.csv", false);
 		alerts = hca.getLastAlertType();
 		assertTrue(alerts.size() >= 1);
@@ -218,6 +255,7 @@ class HF_Decode_ErrorTest {
 		assertTrue(decFile.exists());
 		assertTrue(decFile.delete());
 		hca.resetLastAlertType();
+		
 		assertTrue(encFile.delete());
 	}
 
