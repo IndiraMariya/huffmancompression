@@ -105,7 +105,11 @@ class HF_Encode_ErrorTest {
 		assertTrue("INPUT".equals(alerts.get(0)));
 		assertTrue(!encFile.exists());
 		hca.resetLastAlertType();
-		
+
+		File testFile = new File(dir+"simple.tst");
+        if (testFile.exists()) 
+        	assertTrue(testFile.delete());
+        
 		// test that source file does not exist
 		enc.encode(dir+"simple.tst", "encode/test.bin", "weights/simple.csv", false);
 		alerts = hca.getLastAlertType();
@@ -115,7 +119,6 @@ class HF_Encode_ErrorTest {
 		hca.resetLastAlertType();
 		
 		// test source file exists but is empty
-		File testFile = new File(dir+"simple.tst");
 		try {
 			assertTrue(testFile.createNewFile());
 			enc.encode(dir+"simple.tst", "encode/test.bin", "weights/simple.csv", false);
