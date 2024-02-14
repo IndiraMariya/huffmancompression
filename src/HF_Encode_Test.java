@@ -372,7 +372,6 @@ class HF_Encode_Test {
 			File testFile = new File("data/test_writeEOFandPadding_"+i+".txt");
 			writeTestTextFile(testFile,testStrings[i]);
 			enc_dec.encode(testFile.getPath(), binFile.getPath(), weightsFile, optimize);
-
 			assertTrue(expectedSize[i] == binFile.length());
 			assertTrue(hflib.checkBinaryFiles(binFile));
 			assertTrue(testFile.delete());

@@ -1,3 +1,5 @@
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 
@@ -64,7 +66,78 @@ public class EncodeDecode {
 	 * @param optimize 	if true, ONLY add leaf nodes with non-zero weights to the priority queue
 	 */
 	void encode(String fName,String bfName, String freqWts, boolean optimize) {
-		// TODO: write this method and any required helper methods
+		File inFile = fio.getFileHandle(fName);
+		if (fio.checkFileStatus(inFile, true) != MyFileIO.FILE_OK) {
+			hca.issueAlert(HuffAlerts.INPUT, "ERROR", "File is bad.");
+			return;
+		}
+		
+		if (freqWts == "")
+			weights = gw.readInputFileAndReturnWeights(fName);
+		File freq = fio.getFileHandle(freqWts);
+		int status = fio.checkFileStatus(freq, true);
+		if (status != fio.FILE_OK) {
+			if (status == fio.EMPTY_NAME)
+				hca.issueAlert(HuffAlerts.INPUT, "ERROR", "Name is Empty.");
+			else if (status == fio.NO_READ_ACCESS)
+				hca.issueAlert(HuffAlerts.INPUT, "ERROR", "Cannot Read File.");
+			else if (status == fio.NOT_A_FILE)
+				hca.issueAlert(HuffAlerts.INPUT, "ERROR", "Not a File.");
+			else if (status == fio.READ_ZERO_LENGTH)
+				hca.issueAlert(HuffAlerts.INPUT, "ERROR", "File is Empty.");
+			else if (status == fio.FILE_DOES_NOT_EXIST) {
+				hca.issueAlert(HuffAlerts.INPUT, "ERROR", "File Does Not Exist.");
+				weights = gw.readInputFileAndReturnWeights(fName);
+			}		
+		}
+		else {
+			BufferedReader br = fio.openBufferedReader(freq);
+			String line;
+			weights = new int[128];
+			
+			try {
+				while ((line = br.readLine()) != null) {
+				    String[] parts = line.split(",");
+				    int index = Integer.parseInt(parts[0]);
+				    int weight = Integer.parseInt(parts[1]);
+				    weights[index] = weight;
+				}
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		if (bfName == "") {
+			hca.issueAlert(HuffAlerts.OUTPUT, "ERROR", "Name is Empty.");
+			return;
+		}
+
+		File outFile = fio.getFileHandle(bfName);
+		status = fio.checkFileStatus(outFile, false);
+		if (status != fio.FILE_OK) {
+			if (status == fio.WRITE_EXISTS)
+				hca.issueAlert(HuffAlerts.CONFIRM, "INFORMATION", "File Already Exists");
+			else {
+				if (status == fio.EMPTY_NAME)
+					hca.issueAlert(HuffAlerts.OUTPUT, "ERROR", "Name is Empty.");
+				else if (status == fio.NO_READ_ACCESS)
+					hca.issueAlert(HuffAlerts.OUTPUT, "ERROR", "Cannot Read File.");
+				else if (status == fio.NOT_A_FILE)
+					hca.issueAlert(HuffAlerts.OUTPUT, "ERROR", "Not a File.");
+				else if (status == fio.READ_ZERO_LENGTH)
+					hca.issueAlert(HuffAlerts.OUTPUT, "ERROR", "File is Empty.");
+				else if (status == fio.FILE_DOES_NOT_EXIST)
+					hca.issueAlert(HuffAlerts.OUTPUT, "ERROR", "File Does Not Exist.");
+				return;
+			}	
+		}
+		huffUtil.setWeights(weights);
+		huffUtil.buildHuffmanTree(optimize);
+		huffUtil.createHuffmanCodes(huffUtil.getTreeRoot(), "", 0);
+		executeEncode(inFile, outFile);
+
 	}
 	
 	/**
@@ -85,7 +158,31 @@ public class EncodeDecode {
 	 * @param binFile the File object that represents the compressed output file
 	 */
 	private void executeEncode(File inFile, File binFile) {
-		// TODO: write this method and any required helper methods
+		encodeMap = huffUtil.getEncodeMap();
+		String binStr = "";
+		BufferedReader br = fio.openBufferedReader(inFile);
+		BufferedOutputStream bos = fio.openBufferedOutputStream(binFile);
+		int c;
+		String[] map = huffUtil.getEncodeMap();
+		try {
+			while ((c = br.read()) != -1) {
+				binStr = binStr.concat(map[c]);
+				if (binStr.length() >= 8)
+					binStr = binUtil.writeBinString(bos, binStr);
+			}
+			binStr = binUtil.writeBinString(bos, binStr);
+			binStr = binStr.concat(map[0]);
+			
+			while(binStr.length() % 8 != 0)
+				binStr = binStr.concat("0");
+			binStr = binUtil.writeBinString(bos, binStr);
+			
+			fio.closeStream(bos);
+			fio.closeFile(br);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	// DO NOT CODE THIS METHOD UNTIL EXPLICITLY INSTRUCTED TO DO SO!!!
