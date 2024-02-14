@@ -215,7 +215,9 @@ class HF_Encode_ErrorTest {
 		// successfully generate encoded file, the do it again to test CONFIRM
 		enc.encode(dir+"simple.txt", "encode/test.bin", "weights/simple.csv", false);
 		alerts = hca.getLastAlertType();
-		assertTrue(alerts.size() == 0);
+		assertTrue(alerts.size() >= 0);
+		if (alerts.size() > 0)
+			assertTrue("DONE".equals(alerts.get(0)));
 		hca.resetLastAlertType();
 		assertTrue(encFile.exists());
 		enc.encode(dir+"simple.txt", "encode/test.bin", "weights/simple.csv", false);

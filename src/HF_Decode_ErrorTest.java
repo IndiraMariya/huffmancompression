@@ -243,7 +243,8 @@ class HF_Decode_ErrorTest {
 		// test successful decode - raises DONE alert 
 		dec.decode("encode/test.bin","decode/test.txt", "weights/simple.csv", false);
 		alerts = hca.getLastAlertType();
-		assertTrue(alerts.size() == 0);
+		assertTrue(alerts.size() == 1);  // fix for next year!
+		assertTrue("DONE".equals(alerts.get(0)));
 		hca.resetLastAlertType();
 		assertTrue(decFile.exists());
 		
