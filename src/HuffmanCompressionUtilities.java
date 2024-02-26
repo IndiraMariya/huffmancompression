@@ -96,7 +96,7 @@ public class HuffmanCompressionUtilities {
 				e.printStackTrace();
 			}
 		}
-
+		fio.closeFile(br);	
 		return weights;
 	}			
 
@@ -114,12 +114,10 @@ public class HuffmanCompressionUtilities {
 			if (minimize && weights[i] != 0) {
 	            HuffmanTreeNode node = new HuffmanTreeNode(i, weights[i]);
 	            queue.add(node);
-                System.out.println(node);
 	        }
 			else if (!minimize){
 				HuffmanTreeNode node = new HuffmanTreeNode(i, weights[i]);
 	            queue.add(node);
-	            System.out.println(node);
 			}
 		}
 	}

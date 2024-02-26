@@ -1,5 +1,6 @@
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 
@@ -214,8 +215,15 @@ public class EncodeDecode {
 	void decode(String bfName, String ofName, String freqWts,boolean optimize) {
 		File binFile = fio.getFileHandle(bfName);
 		File outFile = fio.getFileHandle(ofName);
+		File freqFile = fio.getFileHandle(freqWts);
+
 		
 		isFileOk(binFile, true);
+		if (fio.checkFileStatus(freqFile, true) == MyFileIO.FILE_DOES_NOT_EXIST) {
+			hca.issueAlert(HuffAlerts.INPUT, "ERROR", "File Does Not Exist.");
+			return;
+		}
+		isFileOk(freqFile, true);
 		isFileOk(outFile, false);
 		
 		huffUtil.setWeights(gw.readInputFileAndReturnWeights(freqWts));
@@ -248,8 +256,21 @@ public class EncodeDecode {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	private void executeDecode(File binFile, File outFile) throws IOException {
-		String bin = binFile.toString();
-		System.out.println(bin);
+		String binStr = "";
+		BufferedReader br = fio.openBufferedReader(binFile);
+		BufferedWriter bw = fio.openBufferedWriter(outFile);
+		int byteRead;
+	    while ((byteRead = br.read()) != -1) {
+	        binStr += binUtil.convBinToStr(byteRead);
+	        int decodedChar;
+	        while ((decodedChar = huffUtil.decodeString(binStr)) != -1) {
+	            String c = encodeMap[decodedChar];
+	            bw.append(c);
+	            binStr = binStr.substring(encodeMap[decodedChar].length());
+	        }
+	    }
+	    fio.closeFile(br);
+	    fio.closeFile(bw);
 	}
 
 }
