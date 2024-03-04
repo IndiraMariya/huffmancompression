@@ -318,21 +318,18 @@ public class HuffmanCompressionUtilities {
 	 */
 	private int traverseTree(HuffmanTreeNode root, String binStr, int index) {
 		HuffmanTreeNode node = root;
-		
 		if (node.getLeft() == null && node.getRight() == null) {
-			return node.getOrdValue();
-		}
-		
-		if (binStr.length()-1 != index) {
-			if (binStr.charAt(index) == 0) {
-				index ++;
-				traverseTree(root.getLeft(), binStr, index);
-			} else {
-				index ++;
-				traverseTree(root.getRight(), binStr, index);
-			}
-		}
-		return -1;
+	        return node.getOrdValue();
+	    }
+
+	    if (index != binStr.length()) {
+	        if (binStr.charAt(index) == '0') {
+	            return traverseTree(root.getLeft(), binStr, index + 1);
+	        } else {
+	            return traverseTree(root.getRight(), binStr, index + 1);
+	        }
+	    }
+	    return -1;
 	}
 	
 	/**

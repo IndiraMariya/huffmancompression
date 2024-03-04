@@ -40,12 +40,12 @@ public class BinaryIO {
 	String convBinToStr(int aByte) {
 		String str = "";
 		int mask = 0x1 << (8 -1);
-		char[] chars = new char[8];
+//		char[] chars = new char[8];
 		for (int i=0; i < 8; i++) {
-			chars[i] = ((mask & aByte) != 0)  ? '1' : '0';
+			str += ((mask & aByte) != 0)  ? '1' : '0';
 			mask = mask >>> 1;
 		}
-		return(new String(chars));	
+		return str;	
 	}
 	
 	/**

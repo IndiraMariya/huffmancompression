@@ -1,7 +1,9 @@
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+//import java.io.FileInputStream;
 import java.io.IOException;
 
 import myfileio.MyFileIO;
@@ -217,20 +219,39 @@ public class EncodeDecode {
 		File outFile = fio.getFileHandle(ofName);
 		File freqFile = fio.getFileHandle(freqWts);
 
+		if (!isFileOk(binFile, true))
+			return;
 		
-		isFileOk(binFile, true);
 		if (fio.checkFileStatus(freqFile, true) == MyFileIO.FILE_DOES_NOT_EXIST) {
 			hca.issueAlert(HuffAlerts.INPUT, "ERROR", "File Does Not Exist.");
 			return;
 		}
-		isFileOk(freqFile, true);
-		isFileOk(outFile, false);
+		if (!isFileOk(freqFile, true) || !isFileOk(outFile, false))
+			return;
+
 		
-		huffUtil.setWeights(gw.readInputFileAndReturnWeights(freqWts));
+		BufferedReader br = fio.openBufferedReader(freqFile);
+		weights = new int[128];
+		try {
+			String line = br.readLine();
+			while (line != null) {
+				int ordVal = Integer.parseInt(line.split(",")[0]);
+				int weight = Integer.parseInt(line.split(",")[1]);
+				weights[ordVal] = weight;
+				line = br.readLine();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+//		weights = gw.readInputFileAndReturnWeights(freqWts);
+		huffUtil.setWeights(weights);
 		huffUtil.buildHuffmanTree(optimize);
+		encodeMap = huffUtil.getEncodeMap();
 		huffUtil.createHuffmanCodes(huffUtil.getTreeRoot(), "", 0);
 		try {
 			executeDecode(binFile, outFile);
+			hca.issueAlert(HuffAlerts.DONE, "DONE", "Completed Decoding");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -257,19 +278,26 @@ public class EncodeDecode {
 	 */
 	private void executeDecode(File binFile, File outFile) throws IOException {
 		String binStr = "";
-		BufferedReader br = fio.openBufferedReader(binFile);
+		BufferedInputStream bis = fio.openBufferedInputStream(binFile);
 		BufferedWriter bw = fio.openBufferedWriter(outFile);
 		int byteRead;
-	    while ((byteRead = br.read()) != -1) {
-	        binStr += binUtil.convBinToStr(byteRead);
-	        int decodedChar;
-	        while ((decodedChar = huffUtil.decodeString(binStr)) != -1) {
-	            String c = encodeMap[decodedChar];
-	            bw.append(c);
-	            binStr = binStr.substring(encodeMap[decodedChar].length());
-	        }
-	    }
-	    fio.closeFile(br);
+		int c;
+		
+		while ((byteRead = bis.read()) != -1) {
+			binStr += binUtil.convBinToStr(byteRead);
+		    c = huffUtil.decodeString(binStr);
+		    
+		    char ch;
+		    while (c != -1 && c!= 0) {
+		        ch = (char) c;
+		        bw.write(ch);
+		        int len = encodeMap[c].length();
+		        binStr = binStr.substring(len);
+			    c = huffUtil.decodeString(binStr);
+		    }
+		}
+		
+	    fio.closeStream(bis);
 	    fio.closeFile(bw);
 	}
 

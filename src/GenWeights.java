@@ -105,7 +105,6 @@ public class GenWeights {
 				        weights[c]++;
 				   }
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			weights[0]++;
